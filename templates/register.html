@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-panel" style="max-width: 600px; margin: 4rem auto; padding: 2rem;">
+    <div class="animate-fade-in">
+        <h2 class="heading-2" style="text-align: center;">Register for {{ event.name }}</h2>
+        <p class="text-subtle" style="text-align: center; margin-bottom: 2rem;">
+            Fill out the form below to receive your QR code pass.
+        </p>
+
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        <form action="/events/{{ event.id }}/register" method="POST"
+            style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div>
+                <label class="label">Full Name</label>
+                <input type="text" name="name" class="input-field" placeholder="John Doe" required />
+            </div>
+
+            <div>
+                <label class="label">Email Address</label>
+                <input type="email" name="email" class="input-field" placeholder="john@example.com" required />
+            </div>
+
+            <button type="submit" class="btn-primary" style="margin-top: 0.5rem; width: 100%;">
+                Register & Get QR Code
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

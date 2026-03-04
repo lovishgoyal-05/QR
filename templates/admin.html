@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding-top: 3rem;">
+    <h1 class="heading-1">Admin Dashboard</h1>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-top: 2rem;">
+
+        <!-- Left Column: Events Management -->
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <!-- Create Event -->
+            <div class="glass-panel" style="padding: 1.5rem;">
+                <h2 class="heading-2" style="font-size: 1.25rem;">Create New Event</h2>
+                <form action="/admin/events" method="POST" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <input type="text" name="name" class="input-field" placeholder="Event Name" required />
+                    <button type="submit" class="btn-primary">Create Event</button>
+                    {% if create_error %}
+                    <div class="alert alert-error" style="margin-bottom: 0; padding: 0.5rem; font-size: 0.8rem;">{{
+                        create_error }}</div>
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- Select Event -->
+            <div class="glass-panel" style="padding: 1.5rem;">
+                <h2 class="heading-2" style="font-size: 1.25rem;">Select Event</h2>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    {% if not events %}
+                    <p class="text-subtle">No events found. Create one above.</p>
+                    {% else %}
+                    {% for ev in events %}
+                    <a href="/admin?event_id={{ ev.id }}" class="btn-secondary"
+                        style="text-align: left; {% if selected_event and selected_event.id == ev.id %}background: var(--primary); border-color: var(--primary);{% endif %}">
+                        {{ ev.name }}
+                    </a>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Analytics -->
+        <div class="glass-panel" style="padding: 2rem;">
+            {% if not analytics %}
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">
+                Select an event to view analytics
+            </div>
+            {% else %}
+            <div class="animate-fade-in">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                    <h2 class="heading-2" style="margin: 0;">{{ analytics.event_name }} Analytics</h2>
+                    <a href="/admin/export/{{ analytics.event_id }}" class="btn-secondary"
+                        style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                        Export CSV
+                    </a>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                    <div
+                        style="background: rgba(15, 23, 42, 0.4); padding: 1.5rem; border-radius: var(--radius-md); text-align: center;">
+                        <div class="text-subtle"
+                            style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Total
+                            Registrations</div>
+                        <div style="font-size: 2.5rem; font-weight: bold; color: var(--foreground);">{{
+                            analytics.total_registered }}</div>
+                    </div>
+                    <div
+                        style="background: rgba(16, 185, 129, 0.1); padding: 1.5rem; border-radius: var(--radius-md); text-align: center; border: 1px solid rgba(16, 185, 129, 0.3);">
+                        <div class="text-subtle"
+                            style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6ee7b7;">
+                            Checked In</div>
+                        <div style="font-size: 2.5rem; font-weight: bold; color: var(--success);">{{
+                            analytics.total_checked_in }}</div>
+                    </div>
+                </div>
+
+                <h3 class="heading-2" style="font-size: 1.25rem;">Participants Log (<span
+                        style="color: var(--primary);">{{ analytics.attendance_percentage }}%</span>)</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <th style="text-align: left; padding: 0.75rem; color: #94a3b8; font-weight: 500;">Name
+                                </th>
+                                <th style="text-align: left; padding: 0.75rem; color: #94a3b8; font-weight: 500;">Email
+                                </th>
+                                <th style="text-align: left; padding: 0.75rem; color: #94a3b8; font-weight: 500;">Status
+                                </th>
+                                <th style="text-align: left; padding: 0.75rem; color: #94a3b8; font-weight: 500;">
+                                    Check-In Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in analytics.participants %}
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 0.75rem;">{{ p.name }}</td>
+                                <td style="padding: 0.75rem; color: #94a3b8;">{{ p.email }}</td>
+                                <td style="padding: 0.75rem;">
+                                    {% if p.checked_in %}
+                                    <span
+                                        style="background: rgba(16, 185, 129, 0.2); color: #34d399; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Checked
+                                        In</span>
+                                    {% else %}
+                                    <span
+                                        style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.75rem; color: #94a3b8; font-size: 0.875rem;">
+                                    {{ p.check_in_time.strftime('%Y-%m-%d %H:%M:%S') if p.check_in_time else '-' }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not analytics.participants %}
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 2rem; color: #94a3b8;">No
+                                    participants registered yet.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

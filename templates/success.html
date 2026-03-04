@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-panel" style="max-width: 600px; margin: 4rem auto; padding: 2rem; text-align: center;">
+    <div class="animate-fade-in">
+        <h2 class="heading-2" style="color: var(--success);">Registration Successful!</h2>
+        <p class="text-subtle" style="margin-bottom: 2rem;">
+            Save this QR code and present it at the entry point for {{ event.name }}.
+        </p>
+
+        <div
+            style="background: white; padding: 1.5rem; border-radius: var(--radius-md); display: inline-block; margin-bottom: 1.5rem; box-shadow: var(--shadow-lg);">
+            <img src="{{ participant.qr_image_url }}" alt="Your QR Code"
+                style="width: 250px; height: 250px; display: block;" />
+        </div>
+
+        <div
+            style="text-align: left; background: rgba(15, 23, 42, 0.4); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+            <p><strong>Name:</strong> <span style="color: var(--foreground);">{{ participant.name }}</span></p>
+            <p><strong>Email:</strong> <span class="text-subtle">{{ participant.email }}</span></p>
+            <p><strong>Ticket ID:</strong> <span class="text-subtle" style="font-size: 0.8rem;">{{ participant.id
+                    }}</span></p>
+        </div>
+
+        <a href="/" class="btn-secondary" style="display: block; text-align: center; width: 100%;">
+            Return Home
+        </a>
+    </div>
+</div>
+{% endblock %}

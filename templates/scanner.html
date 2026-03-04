@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block head %}
+<!-- html5-qrcode library -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="max-width: 600px; margin: 4rem auto; padding: 2rem; text-align: center;">
+    <h1 class="heading-1">QR Scanner Booth</h1>
+    <p class="text-subtle" style="margin-bottom: 2rem;">
+        Point the camera at a participant's QR code to verify their check-in dynamically.
+    </p>
+
+    <!-- The element where html5-qrcode mounts -->
+    <div id="reader"
+        style="width: 100%; margin-bottom: 2rem; background: #000; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border);">
+    </div>
+
+    <div id="loading" style="display: none; color: var(--primary); font-weight: 600;">Processing Scan...</div>
+
+    <div id="message-box"
+        style="display: none; padding: 1.5rem; border-radius: var(--radius-md); font-weight: 600; font-size: 1.125rem;">
+        <!-- dynamic messages injected here via JS -->
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const messageBox = document.getElementById('message-box');
+        const loadingBox = document.getElementById('loading');
+        let isProcessing = false;
+
+        function showMessage(text, isSuccess) {
+            messageBox.style.display = 'block';
+            messageBox.innerHTML = text;
+
+            if (isSuccess) {
+                messageBox.style.background = 'rgba(16, 185, 129, 0.1)';
+                messageBox.style.border = '1px solid var(--success)';
+                messageBox.style.color = '#34d399';
+            } else {
+                messageBox.style.background = 'rgba(239, 68, 68, 0.1)';
+                messageBox.style.border = '1px solid var(--danger)';
+                messageBox.style.color = '#fca5a5';
+            }
+        }
+
+        async function processCheckIn(qrToken) {
+            isProcessing = true;
+            loadingBox.style.display = 'block';
+            messageBox.style.display = 'none';
+
+            try {
+                const response = await fetch('/checkin/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ qr_token: qrToken })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(data.message + " Welcome " + data.participant.name + "!", true);
+                } else {
+                    showMessage(data.message || "Invalid or Duplicate Scan.", false);
+                }
+            } catch (error) {
+                showMessage("Network error communicating with the server.", false);
+            } finally {
+                loadingBox.style.display = 'none';
+
+                // Allow scanning the next code after 3.5 seconds
+                setTimeout(() => {
+                    isProcessing = false;
+                    messageBox.style.display = 'none';
+                }, 3500);
+            }
+        }
+
+        // Initialize Scanner on mount
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader",
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            false
+        );
+
+        function onScanSuccess(decodedText, decodedResult) {
+            if (isProcessing) return; // Prevent double firing
+            // pause further scanning UI alerts while checking API
+            processCheckIn(decodedText);
+        }
+
+        function onScanFailure(error) {
+            // handle scan failure, usually better to ignore and keep scanning
+        }
+
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    });
+</script>
+{% endblock %}
